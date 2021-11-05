@@ -57,8 +57,13 @@ class ModelFileStore:
                    last: bool = True) -> List[Model]:
         models = ModelFileStore.model_read(os.path.join(path, f"{ModelFileStore.partitioning_model_name}={model_name}"))
         if last:
-            return max(models, key=lambda x: x.date)
+            return [max(models, key=lambda x: x.date)]
         return models
+
+    @staticmethod
+    def get_metrics(path: str, model_name: str) -> pd.DataFrame:
+        models = ModelFileStore.get_models(path, model_name, last=False)
+        return pd.DataFrame([m.metric.to_json() for m in models])
 
     @staticmethod
     def _map_partition_filepath(path: str, partition_filter: dict) -> str:
@@ -93,6 +98,7 @@ if __name__ == '__main__':
 
     # Test reading of a last saved model under mymodel.pickle
     test_r_model_path = os.path.join(package_path, 'tests/models/model_name=mymodel.pickle')
-    print(ModelFileStore.model_read(test_r_model_path))
+    print('tests/models/model_name=mymodel.pickle', ModelFileStore.model_read(test_r_model_path))
     test_r2_model_path = os.path.join(package_path, 'tests/models/')
-    print(ModelFileStore.get_models(test_r2_model_path, "mymodel.pickle", last=True))
+    print("mymodel.pickle", ModelFileStore.get_models(test_r2_model_path, "mymodel.pickle", last=True))
+    print(ModelFileStore.get_metrics(test_r2_model_path, "mymodel.pickle"))
